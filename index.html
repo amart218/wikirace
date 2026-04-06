@@ -265,7 +265,7 @@
       <div class="route-chip loading" id="preview-end">…</div>
     </div>
     <div class="field-label">Tu nombre</div>
-    <input class="field" id="player-name" type="text" placeholder="Escribe tu nombre para jugar" maxlength="24" oninput="document.getElementById('start-btn').disabled = !this.value.trim()"/>
+    <input class="field" id="player-name" type="text" placeholder="Escribe tu nombre para jugar" maxlength="24" oninput="checkReady()"/>
     <button class="btn btn-primary" id="start-btn" onclick="startGame()" disabled>INICIAR CARRERA</button>
   </div>
 </div>
@@ -392,9 +392,15 @@ const state = {
   document.getElementById('preview-end').textContent   = CONFIG.end;
   document.getElementById('preview-start').classList.remove('loading');
   document.getElementById('preview-end').classList.remove('loading');
-  document.getElementById('start-btn').disabled = false;
+  articlesReady = true;
+  checkReady();
 })();
 
+let articlesReady = false;
+function checkReady() {
+  const name = document.getElementById('player-name').value.trim();
+  document.getElementById('start-btn').disabled = !(articlesReady && name.length > 0);
+}
 async function validatePair() {
   // Intenta verificar que los artículos existen; si no, regenera con offset
   const check = async (title) => {
@@ -595,7 +601,7 @@ function winGame() {
 async function saveResult() {
   const statusEl = document.getElementById('save-status');
 
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbw6Wn4c64vJBg-zpwX3sHnqwVGaHnRMttBHW3-6Zw8vPJYeBFqnIoZAO_Cz71iYJTHPTg/exec') {
+  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbw6Wn4c64vJBg-zpwX3sHnqwVGaHnRMttBHW3-6Zw8vPJYeBFqnIoZAO_Cz71iYJTHPTg/exec ') {
     statusEl.textContent = '⚠ Configura la URL de Apps Script para guardar resultados';
     statusEl.className   = 'save-status failed';
     return;
