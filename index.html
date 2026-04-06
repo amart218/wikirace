@@ -265,7 +265,7 @@
       <div class="route-chip loading" id="preview-end">…</div>
     </div>
     <div class="field-label">Tu nombre</div>
-    <input class="field" id="player-name" type="text" placeholder="Jugador anónimo" maxlength="24"/>
+    <input class="field" id="player-name" type="text" placeholder="Escribe tu nombre para jugar" maxlength="24" oninput="document.getElementById('start-btn').disabled = !this.value.trim()"/>
     <button class="btn btn-primary" id="start-btn" onclick="startGame()" disabled>INICIAR CARRERA</button>
   </div>
 </div>
@@ -310,9 +310,6 @@
     </div>
     <div class="path-display" id="win-path"></div>
     <div class="save-status" id="save-status"></div>
-    <div class="win-actions">
-      <button class="btn btn-primary" onclick="goHome()">JUGAR DE NUEVO</button>
-    </div>
   </div>
 </div>
 
