@@ -320,7 +320,7 @@
 // ║  ÚNICA CONFIGURACIÓN NECESARIA                      ║
 // ║  Pega aquí la URL de tu Google Apps Script          ║
 // ╚══════════════════════════════════════════════════════╝
-const APPS_SCRIPT_URL = 'PEGA_AQUI_TU_URL_DE_APPS_SCRIPT';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6Wn4c64vJBg-zpwX3sHnqwVGaHnRMttBHW3-6Zw8vPJYeBFqnIoZAO_Cz71iYJTHPTg/exec';
 // ════════════════════════════════════════════════════════
 
 // ── POOL DE ARTÍCULOS POPULARES EN WIKIPEDIA ES ──
@@ -595,7 +595,7 @@ function winGame() {
 async function saveResult() {
   const statusEl = document.getElementById('save-status');
 
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyjeqRgntLIAtH3AHpQrUocevioxPSWUZ5LyQ5Mvl5qgUsNG9EG30CdVwlRQa-zVedPnQ/exec') {
+  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbw6Wn4c64vJBg-zpwX3sHnqwVGaHnRMttBHW3-6Zw8vPJYeBFqnIoZAO_Cz71iYJTHPTg/exec') {
     statusEl.textContent = '⚠ Configura la URL de Apps Script para guardar resultados';
     statusEl.className   = 'save-status failed';
     return;
