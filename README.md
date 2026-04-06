@@ -1,2 +1,3 @@
 # prueba
-Cada dia se cargan nuevas palabras
+WikiRace es un juego en el que los participantes compiten por llegar desde un artículo de Wikipedia a otro utilizando únicamente los enlaces internos que aparecen dentro de las páginas. 
+Se parte de una página inicial y se establece un objetivo, y los jugadores deben navegar haciendo clic de enlace en enlace dentro de los artículos hasta llegar al destino. Gana quien lo consiga con menos clics o en menos tiempo, según las reglas acordadas. El juego pone a prueba la rapidez mental, la capacidad de asociación de ideas y el conocimiento general, ya que obliga a conectar conceptos aparentemente lejanos a través de la estructura de Wikipedia. Puede jugarse de forma individual o competitiva, y suele ser sorprendente ver cómo temas muy distintos pueden conectarse mediante pocos saltos entre artículos.
