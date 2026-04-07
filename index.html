@@ -88,6 +88,13 @@
     .route-chip.loading { color: var(--muted); border-color: var(--border); }
     .route-arrow { color: var(--muted); font-size: 1.3rem; }
 
+    .no-pair-msg {
+      font-family: 'IBM Plex Mono', monospace; font-size: .8rem;
+      color: var(--red); text-align: center; padding: .75rem;
+      border: 1px solid var(--red); border-radius: 8px;
+      margin-bottom: 1rem; display: none;
+    }
+
     .field-label {
       font-family: 'IBM Plex Mono', 'Courier New', monospace;
       font-size: .7rem; letter-spacing: 3px;
@@ -192,6 +199,7 @@
     #wiki-content .reference, #wiki-content .reflist, #wiki-content .references { display: none; }
     #wiki-content .navbox, #wiki-content .sistersitebox, #wiki-content .hatnote { display: none; }
     #wiki-content .mw-editsection { display: none; }
+    #wiki-content .mw-references-wrap,.magnify,[role="note"],.mw-empty-elt,.printfooter,.catlinks { display: none; }
     #wiki-content .thumb { clear: right; float: right; margin: 0 0 .8em 1.2em; border: 1px solid #c8ccd1; background: #f8f9fa; padding: 4px; font-size: .875em; text-align: center; }
     #wiki-content .thumbcaption { color: #555; font-size: .875em; padding: .3em 0; }
 
@@ -219,11 +227,9 @@
     .path-display { font-family: 'IBM Plex Mono', monospace; font-size: .75rem; color: var(--muted); line-height: 2; margin-bottom: 1.5rem; word-break: break-word; }
     .win-actions { display: flex; flex-direction: column; gap: .75rem; }
 
-    /* Save status */
     .save-status {
       font-family: 'IBM Plex Mono', monospace; font-size: .75rem;
-      text-align: center; padding: .5rem; border-radius: 6px;
-      margin-top: .5rem;
+      text-align: center; padding: .5rem; border-radius: 6px; margin-top: .5rem;
     }
     .save-status.saving  { color: var(--muted); }
     .save-status.saved   { color: var(--accent); }
@@ -259,6 +265,9 @@
   <div class="logo-sub">navega hasta el destino</div>
   <div class="home-card">
     <div class="daily-badge">carrera del día</div>
+    <div class="no-pair-msg" id="no-pair-msg">
+      ⚠ No hay carrera definida para hoy. Añade un par para esta fecha en DAILY_PAIRS.
+    </div>
     <div class="route-preview">
       <div class="route-chip loading" id="preview-start">…</div>
       <div class="route-arrow">→</div>
@@ -316,55 +325,35 @@
 <div class="notif" id="notif"></div>
 
 <script>
-// ╔══════════════════════════════════════════════════════╗
-// ║  ÚNICA CONFIGURACIÓN NECESARIA                      ║
-// ║  Pega aquí la URL de tu Google Apps Script          ║
-// ╚══════════════════════════════════════════════════════╝
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  CONFIGURACIÓN DE CARRERAS DIARIAS                                   ║
+// ║                                                                      ║
+// ║  Formato de clave: 'AAAA-MM-DD'                                      ║
+// ║  Añade tantas fechas como quieras.                                   ║
+// ║                                                                      ║
+// ║  Los títulos deben coincidir EXACTAMENTE con el título del           ║
+// ║  artículo en Wikipedia en español. Ej: 'Agujero negro', no           ║
+// ║  'agujero negro' ni 'Agujero_Negro'.                                 ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+const DAILY_PAIRS = {
+  '2025-04-06': { start: 'Fútbol',       end: 'Agujero negro' },
+  '2025-04-07': { start: 'Isla de la Cartuja',     end: 'Moulin Rouge!' },
+  '2025-04-08': { start: 'Harry Potter',    end: 'El origen de las especies' },
+  '2025-04-09': { start: 'Bitcoin',       end: 'Paella' },
+  '2025-04-13': { start: 'España',       end: 'Genética' }
+  // ── Añade más pares aquí siguiendo el mismo formato ──────────────────
+  // 'AAAA-MM-DD': { start: 'Artículo de inicio', end: 'Artículo destino' },
+};
+
+// Artículo de fallback si no hay par definido para hoy
+const FALLBACK_PAIR = { start: 'Historia', end: 'Matemáticas' };
+
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  URL de tu Google Apps Script (para guardar resultados)             ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6Wn4c64vJBg-zpwX3sHnqwVGaHnRMttBHW3-6Zw8vPJYeBFqnIoZAO_Cz71iYJTHPTg/exec';
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 
-// ── POOL DE ARTÍCULOS POPULARES EN WIKIPEDIA ES ──
-// El juego elige automáticamente start y end basándose en la fecha.
-// Puedes ampliar esta lista con más artículos si quieres.
-const ARTICLE_POOL = [
-  'Fútbol','Historia','Matemáticas','Filosofía','España','Música',
-  'Ciencia','Arte','Literatura','Política','Geografía','Biología',
-  'Física','Química','Economía','Psicología','Astronomía','Medicina',
-  'Tecnología','Arquitectura','Cinema','Religión','Lingüística','Derecho',
-  'Sociología','Antropología','Ecología','Geometría','Álgebra','Óptica',
-  'Botánica','Zoología','Geología','Meteorología','Oceanografía','Genética',
-  'Neurología','Paleontología','Arqueología','Gastronomía','Deporte',
-  'Teatro','Danza','Fotografía','Escultura','Pintura','Poesía',
-  'Periodismo','Educación','Transporte','Agricultura','Industria',
-  'Comercio','Navegación','Aviación','Electricidad','Informática',
-  'Internet','Robótica','Energía','Ecología','Climatología','Nutrición',
-  'Cirugía','Farmacología','Epidemiología','Estadística','Topología',
-  'Termodinámica','Electromagnetismo','Óptica','Mecánica','Hidráulica',
-];
-
-// ── GENERADOR DE PAR DIARIO ──
-// Usa la fecha como semilla — mismo resultado para todos el mismo día.
-function seededRandom(seed) {
-  let s = seed;
-  return function() {
-    s = (s * 1664525 + 1013904223) & 0xffffffff;
-    return (s >>> 0) / 0xffffffff;
-  };
-}
-
-function getDailyPair() {
-  const now   = new Date();
-  const seed  = now.getFullYear() * 10000 + (now.getMonth()+1) * 100 + now.getDate();
-  const rng   = seededRandom(seed);
-  const pool  = [...ARTICLE_POOL];
-  const iA    = Math.floor(rng() * pool.length);
-  pool.splice(iA, 1);                          // evitar que start === end
-  const iB    = Math.floor(rng() * pool.length);
-  return { start: ARTICLE_POOL[iA], end: pool[iB] };
-}
-
-// ── STATE ──
-const CONFIG = { start: '', end: '' };
 const BLOCKED = [
   '/wiki/Special:','/wiki/Wikipedia:','/wiki/Archivo:',
   '/wiki/Ayuda:','/wiki/Portal:','/wiki/Categoría:',
@@ -372,6 +361,7 @@ const BLOCKED = [
   '/wiki/Plantilla:','/wiki/Template:','/wiki/Usuario:'
 ];
 
+const CONFIG = { start: '', end: '' };
 const state = {
   playerName: '', currentArticle: '',
   path: [], clicks: 0,
@@ -379,42 +369,44 @@ const state = {
   history: [],
 };
 
-// ── INIT: cargar par del día ──
-(async function init() {
-  const pair = getDailyPair();
-  CONFIG.start = pair.start;
-  CONFIG.end   = pair.end;
+// ── Obtener fecha local en formato AAAA-MM-DD ──
+function getTodayKey() {
+  const now = new Date();
+  const y   = now.getFullYear();
+  const m   = String(now.getMonth() + 1).padStart(2, '0');
+  const d   = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
-  // Verificar que ambos artículos existen en Wikipedia
-  await validatePair();
+// ── INIT ──
+let articlesReady = false;
+
+(async function init() {
+  const key  = getTodayKey();
+  const pair = DAILY_PAIRS[key] || null;
+
+  if (!pair) {
+    // No hay par para hoy: mostrar aviso y usar fallback
+    document.getElementById('no-pair-msg').style.display = 'block';
+    CONFIG.start = FALLBACK_PAIR.start;
+    CONFIG.end   = FALLBACK_PAIR.end;
+  } else {
+    CONFIG.start = pair.start;
+    CONFIG.end   = pair.end;
+  }
 
   document.getElementById('preview-start').textContent = CONFIG.start;
   document.getElementById('preview-end').textContent   = CONFIG.end;
   document.getElementById('preview-start').classList.remove('loading');
   document.getElementById('preview-end').classList.remove('loading');
+
   articlesReady = true;
   checkReady();
 })();
 
-let articlesReady = false;
 function checkReady() {
   const name = document.getElementById('player-name').value.trim();
   document.getElementById('start-btn').disabled = !(articlesReady && name.length > 0);
-}
-async function validatePair() {
-  // Intenta verificar que los artículos existen; si no, regenera con offset
-  const check = async (title) => {
-    try {
-      const enc = encodeURIComponent(title.replace(/ /g,'_'));
-      const r = await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${enc}`);
-      return r.ok;
-    } catch { return false; }
-  };
-  const okStart = await check(CONFIG.start);
-  const okEnd   = await check(CONFIG.end);
-  // Si alguno falla, usar fallback fijo
-  if (!okStart) CONFIG.start = 'Historia';
-  if (!okEnd)   CONFIG.end   = 'Matemáticas';
 }
 
 // ── SCREENS ──
@@ -473,7 +465,7 @@ async function loadArticle(title) {
   }
 
   try {
-    const enc = encodeURIComponent(title.replace(/ /g,'_'));
+    const enc  = encodeURIComponent(title.replace(/ /g,'_'));
     const resp = await fetch(`https://es.wikipedia.org/w/api.php?action=parse&page=${enc}&prop=text&formatversion=2&format=json&origin=*`);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
@@ -517,7 +509,7 @@ function renderArticle(title, rawHtml) {
     ['src','data-src'].forEach(attr => {
       const v = img.getAttribute(attr);
       if (!v) return;
-      if (v.startsWith('//'))   img.setAttribute(attr, 'https:' + v);
+      if (v.startsWith('//'))    img.setAttribute(attr, 'https:' + v);
       else if (v.startsWith('/')) img.setAttribute(attr, 'https://es.wikipedia.org' + v);
     });
     img.removeAttribute('srcset');
@@ -600,39 +592,31 @@ function winGame() {
 // ── GUARDAR EN GOOGLE SHEETS ──
 async function saveResult() {
   const statusEl = document.getElementById('save-status');
-
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbw6Wn4c64vJBg-zpwX3sHnqwVGaHnRMttBHW3-6Zw8vPJYeBFqnIoZAO_Cz71iYJTHPTg/exec ') {
-    statusEl.textContent = '⚠ Configura la URL de Apps Script para guardar resultados';
-    statusEl.className   = 'save-status failed';
-    return;
-  }
-
   statusEl.textContent = '⏳ Guardando resultado…';
   statusEl.className   = 'save-status saving';
 
   const now  = new Date();
-  const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const date = getTodayKey();
 
   const payload = {
-    fecha:    date,
-    hora:     now.toTimeString().slice(0,8),
-    jugador:  state.playerName,
-    inicio:   CONFIG.start,
-    destino:  CONFIG.end,
-    tiempo:   formatTime(state.elapsed),
-    segundos: Math.floor(state.elapsed / 1000),
+    fecha:     date,
+    hora:      now.toTimeString().slice(0,8),
+    jugador:   state.playerName,
+    inicio:    CONFIG.start,
+    destino:   CONFIG.end,
+    tiempo:    formatTime(state.elapsed),
+    segundos:  Math.floor(state.elapsed / 1000),
     articulos: state.path.length,
-    ruta:     state.path.join(' → '),
+    ruta:      state.path.join(' → '),
   };
 
   try {
     await fetch(APPS_SCRIPT_URL, {
       method:  'POST',
-      mode:    'no-cors',         // Apps Script no devuelve CORS headers en POST
+      mode:    'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload),
     });
-    // Con no-cors no podemos leer la respuesta, pero si no lanza error, llegó
     statusEl.textContent = '✓ Resultado guardado';
     statusEl.className   = 'save-status saved';
   } catch(err) {
